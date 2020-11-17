@@ -1,0 +1,45 @@
+<div class="<%= prefix %>-widget <%= prefix %>-result-widget <%= prefix %>-result-total-widget">
+
+  <% _.each(totals, function (item) { %>
+
+  <div class="<%= prefix %>-result-widget-head <%= prefix %>-result-widget-head-<%= item.key %>">
+    <h3><%= item.title %> <%= action %></h3>
+  </div>
+  
+  <div class="<%= prefix %>-widget-total <%= prefix %>-widget-total-<%= item.key %> <%= prefix %>-widget-total-<%= item.unit %>">
+    <div class="<%= prefix %>-widget-total-figure-abbr <%= prefix %>-widget-total-figure-abbr-<%= item.unit %>"><%= item.abbr %></div>
+    <% if (item.textLines) { %>
+    <div class="<%= prefix %>-widget-total-figure-full">
+      <% _.each(item.textLines, function(line, i) { %>
+      <% if (i) { %>
+      <br>
+      <% } %>
+      <% _.each(line, function(part) { if (part.numberType) { %><span class="<%= prefix %>-number <%= prefix %>-number-<%= part.numberType %>"><%= part.text %></span><% } else {%><%= part %><% }}); %>
+      <% }); %>
+    </div>
+  <% } %>
+  </div>
+
+  <% }); %>
+
+  <div class="<%= prefix %>-result-widget-action-list">
+    <div class="<%= prefix %>-widget-action <%= prefix %>-widget-action-full">
+      <a 
+        <% if (fullResultsResource) { %>
+        <%= prefix %>-resource="<%= fullResultsResource %>"
+        <% } else { %>
+        style="visibility: hidden;"
+        <% } %>
+        ><%= i18n.pgettext("dashboard-page", "See full results") %></a>
+    </div>
+    <!-- <div class="<%= prefix %>-widget-action <%= prefix %>-widget-action-share <%= prefix %>-disabled"> -->
+    <!--   <i class="fa fa-share-alt"></i> -->
+    <!--   <a href=""><%= i18n.pgettext("dashboard-page", "Share this") %></a> -->
+    <!-- </div> -->
+    <!-- <div class="<%= prefix %>-widget-action <%= prefix %>-widget-action-download <%= prefix %>-disabled"> -->
+    <!--   <i style="visibility: hidden;" class="fa fa-save"></i> -->
+    <!--   <a style="visibility: hidden;" href=""><%= i18n.pgettext("dashboard-page", "Download full data") %></a> -->
+    <!-- </div> -->
+  </div>
+
+</div>

@@ -1,0 +1,6 @@
+.\#*
+flycheck_*
+
+build/
+dist/
+*.egg-info/
