@@ -319,15 +319,30 @@ class FilterGroupedSet(Filter):
 
         self.items_full = set()
         if self.items:
+            if None in self.items:
+                app_log.error("`None` in `FilterGroupedSet.items` (`%s`).", self.key)
+                app_log.error(repr(self.items))
             self.items_full.update(self.items)
+
         if self.groups:
             assert not self.items_full & set(self.groups)
+            if None in self.groups:
+                app_log.error("`None` in `FilterGroupedSet.groups` (`%s`).", self.key)
+                app_log.error(repr(self.groups))
             self.items_full.update(self.groups)
+
         if self.groups_extra_keys:
             assert not self.items_full & self.groups_extra_keys
+            if None in self.groups_extra_keys:
+                app_log.error("`None` in `FilterGroupedSet.groups_extra_keys` (`%s`).", self.key)
+                app_log.error(repr(self.groups_extra_keys))
             self.items_full.update(self.groups_extra_keys)
+
         if self.null_value:
             assert self.null_value not in self.items_full
+            if self.null_value is None:
+                app_log.error("`FilterGroupedSet.null_value` is `None` (`%s`).", self.key)
+                app_log.error(repr(self.null_value))
             self.items_full.add(self.null_value)
 
         if "placeholderNames" in spec and self.items:
@@ -384,10 +399,6 @@ class FilterGroupedSet(Filter):
         if self.preverify:
             preverify_redirect = self.preverify(args, raw_params)
             redirect |= preverify_redirect
-
-        if None in self.items_full:
-            app_log.error(self.key)
-            app_log.error(repr(self.items_full))
 
         if args[self.key] and self.items_full:
             values = args[self.key]
