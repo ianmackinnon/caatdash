@@ -12,15 +12,29 @@ logging.getLogger('pytest_selenium.pytest_selenium').setLevel(logging.WARNING)
 
 FILTER_SET_SEARCH_PAUSE = 0.2
 JAVASCRIPT_ERROR_URL_IGNORE = {
-        "twitter",
-        "twimg",
-        "facebook",
+    "twitter",
+    "twimg",
+    "facebook",
+    "civi-int",
 }
 
 
 
-def assert_no_errors(selenium, base_url):
-    errors = selenium.javascript_errors(host=base_url, ignore=JAVASCRIPT_ERROR_URL_IGNORE)
+def assert_no_errors(
+        selenium,
+        base_url,
+        ignore: Union[Iterable[str], str, None] = None,
+):
+    ignore_set = (
+        set(ignore) if isinstance(ignore, (set, list, dict)) else
+        set([ignore]) if ignore else
+        set())
+
+    errors = selenium.javascript_errors(
+        host=base_url,
+        ignore=JAVASCRIPT_ERROR_URL_IGNORE | ignore_set
+    )
+
     for item in errors:
         LOG.error(item["message"])
     assert not errors
