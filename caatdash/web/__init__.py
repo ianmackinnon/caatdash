@@ -91,6 +91,35 @@ def post_limit_items(f):
 
 
 
+# Format functions
+
+
+
+def format_title_plain(title):
+    """
+    Remove square brackets from text, used to mark up bold title text.
+
+    `"the [UK]'s list of “[Countries of Concern]”"`
+    becomes:
+    `"the UK's list of “Countries of Concern”"`
+
+    """
+    return re.sub(r"[\[\]]", "", title)
+
+
+
+def format_title_bold_only(title):
+    """
+    Extract and concatenate bold title text.
+
+    `"the [UK]'s list of “[Countries of Concern]”"`
+    becomes:
+    `"UK Countries of Concern"`
+    """
+    return " ".join(re.findall(r"\[(.+?)\]", title))
+
+
+
 # Dependency building
 
 
