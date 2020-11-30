@@ -55,7 +55,7 @@ def get_state(
 
 
 
-def await_state(
+def await_state_prefix(
         selenium,
         prefix: str,
         blacklist: Union[None, str, Iterable[str]] = None,
@@ -87,7 +87,7 @@ def await_state(
 
 
 
-def filter_set_search(
+def filter_set_search_prefix(
         selenium,
         prefix: str,
         key: str,
@@ -125,3 +125,68 @@ def filter_set_search(
             results.append(item.text)
 
     return results
+
+
+
+
+def get_rank_widget_data(selenium, prefix, widget_css_key, result=None) -> dict:
+    """
+    State should already be loaded. No elements will be awaited.
+    """
+
+    assert result == "first_and_count"
+
+    widget_selector = f".{prefix}-widget-rank-{widget_css_key}"
+    widget_el = selenium.find(widget_selector, wait=False)
+
+    title_el = selenium.find(
+        f".{prefix}-result-widget-head h3",
+        node=widget_el, required=True, wait=False)
+    head_text_el = selenium.find(
+        f".{prefix}-result-widget-bar-title .{prefix}-result-bar-text",
+        node=widget_el, required=True, wait=False)
+    head_value_el = selenium.find(
+        f".{prefix}-result-widget-bar-title .{prefix}-result-bar-value",
+        node=widget_el, required=True, wait=False)
+
+    data = {
+        "title": title_el.text,
+        "head": {
+            "text": head_text_el.text,
+            "value": head_value_el.text,
+        },
+        "items": []
+    }
+
+    item_selector = f".{prefix}-result-widget-bar-list .{prefix}-result-bar"
+    item_generator = selenium.find_all(
+        item_selector, node=widget_el, required=True, wait=False)
+
+    if result == "first_and_count":
+        data["count"] = len(item_generator)
+
+    for item_el in item_generator:
+        text_el = selenium.find(
+            f".{prefix}-result-bar-text",
+            node=item_el, required=True, wait=False)
+        value_el = selenium.find(
+            f".{prefix}-result-bar-value",
+            node=item_el, required=False, wait=False)
+        bar_el = selenium.find(
+            f".{prefix}-result-bar-text",
+            node=item_el, required=False, wait=False)
+        item = {
+            "text": text_el.text,
+        }
+
+        if value_el:
+            item["value"] = value_el.text
+        if bar_el:
+            item["bar"] = bar_el.value_of_css_property("width")
+
+        data["items"].append(item)
+
+        if result == "first_and_count":
+            break
+
+    return data
