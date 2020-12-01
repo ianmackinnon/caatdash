@@ -29,6 +29,7 @@
 
     filter.key = filterSpec.key;
     filter.text = filterSpec.text;
+    filter.hidden = filterSpec.hidden;
 
     // Upstream properties
 
@@ -182,8 +183,40 @@
 
   function CaatDashFilterText (app, control, filterSpec, setCallback) {
     var filter = this;
+    var placeholder;
 
     CaatDashFilter.call(this, app, control, filterSpec, setCallback);
+
+    filter.alwaysOpen = filterSpec.alwaysOpen;
+
+    if (!_.isNil(_.get(filter, "text.placeholderNames"))) {
+      placeholder = _.map(filter.text.placeholderNames, function (v) {
+        if (filterSpec.i18nContextOptionName) {
+          return app.i18n.pgettext(filterSpec.i18nContextOptionName, v);
+        }
+        return v;
+      }).join(", ");
+    }
+
+    if (!filterSpec.hidden) {
+      var $filter = $(app.render("filter-text.html", {
+        label: filter.text.label,
+        key: filter.key,
+        placeholder: placeholder,
+      }));
+
+      filter.el = {
+        $filter: $filter,
+        $options:  $filter.find(app.selector(
+          ".<%= prefix %>-filter-option-list")),
+        $input:  $filter.find(app.selector(
+          ".<%= prefix %>-filter-option-search input")),
+        $loading:  $filter.find(app.selector(
+          "span.<%= prefix %>-filter-loading"))
+      };
+    }
+
+    filter.init(app);
   }
 
   CaatDashFilter.prototype.register.text = CaatDashFilterText;
@@ -211,7 +244,88 @@
       }
 
       return params;
+    },
+
+    upstreamSet: function (text) {
+      this.setCallback(this.key, this.value, text);
+    },
+
+    init: function (app, options) {
+      var filter = this;
+
+      if (filter.el) {
+        this.initFilterFolding({
+          alwaysOpen: filter.alwaysOpen,
+          openCallback: function (options) {
+            options = _.extend({
+              interactive: true
+            }, options);
+
+            filter.el.$input.prop("disabled", false);
+            if (options.interactive) {
+              filter.el.$input.focus();
+            }
+          },
+          closeCallback: function () {
+            filter.el.$input.prop("disabled", true);
+          },
+          clearCallback: function () {
+            filter.value = null;
+            filter.el.$input.val("");
+            filter.setCallback(filter.key, null, "clearcallback 1");
+          }
+        });
+
+        filter.el.$input.on("change", function (event) {
+          filter.set(filter.el.$input.val());
+        });
+
+        // Only disable inputs after events are bound, to avoid
+        // users entering text while page is initializing:
+        filter.el.$input.prop("disabled", false);
+      }
+    },
+
+    set: function (value) {
+      // The `value` of the filter is either `null` or a non-zero length string.
+
+      var filter = this;
+
+      if (_.isEqual(value, filter.value)) {
+        return;
+      }
+
+      filter.value = value;
+
+      if (filter.el) {
+        if (filter.value) {
+          filter.el.$input.val(filter.value);
+          if (_.isFunction(filter.open)) {
+            filter.open();
+          }
+        }
+
+        if (_.isFunction(filter.clearEnabled)) {
+          filter.clearEnabled(!!filter.value);
+        }
+      }
+
+      filter.upstreamSet("update");
+    },
+
+    enable: function (value) {
+      var filter = this;
+      var app = filter.app;
+
+      if (filter.el) {
+        var $control = filter.el.$filter.find(app.selector(
+          "div.<%= prefix %>-filter-control"));
+
+        filter.el.$filter.toggleClass(app.selector("<%= prefix %>-disabled"), !value);
+        $control.toggle(value);
+      }
     }
+
   });
 
   // Filter Set Class
@@ -233,7 +347,7 @@
     filter.expandFilters = filterSpec.expandFilters;
     filter.allowSearchText = filterSpec.allowSearchText;
 
-    if (!_.isNil(filter.text.placeholderNames)) {
+    if (!_.isNil(_.get(filter, "text.placeholderNames"))) {
       placeholder = _.map(filter.text.placeholderNames, function (v) {
         if (filterSpec.i18nContextOptionName) {
           return app.i18n.pgettext(filterSpec.i18nContextOptionName, v);
@@ -453,12 +567,6 @@
 
             return false;         // Do not set input to selected value;
           }
-        });
-      }
-
-      if (filter.text.placeholder) {
-        filter.el.$input.attr({
-          "placeholder": filter.text.placeholder
         });
       }
 
