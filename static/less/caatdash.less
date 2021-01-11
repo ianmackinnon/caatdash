@@ -10,6 +10,9 @@
 @color-caat-stone: #eje7e0;
 @color-caat-midnight-blue: #1e1d3e;
 
+@dashboard-widget-margin: 20px;
+@home-widget-margin: 40px;
+
 
 /* Undo main site rules */
 
@@ -48,12 +51,12 @@ header nav {
     box-sizing: border-box;
 }
 
-#@{prefix} a {
+#@{prefix} a[href] {
     text-decoration: none;
     color: @link-color;
 }
 
-#@{prefix} a:hover {
+#@{prefix} a[href]:hover {
     color: @link-color-hover;
     text-decoration: underline;
 }
@@ -224,24 +227,13 @@ a.@{prefix}-control-icon:hover {
 
 #@{prefix}-home-intro,
 #@{prefix}-home-suggestions {
-    margin: 0;
-}
-#@{prefix}-home-intro .@{prefix}-column {
-    position: relative;
-    width: calc((100% - 40px * 1) / 2);
-    margin: calc(40px / 2) 0;
-    margin-top: -10px;
-}
-#@{prefix}-home-intro .@{prefix}-column:first-child {
-    margin-right: calc(40px / 2);
-}
-#@{prefix}-home-intro .@{prefix}-column:last-child {
-    margin-left: calc(40px / 2);
+    margin-left: calc(-@home-widget-margin / 2);
+    margin-right: calc(-@home-widget-margin / 2);
 }
 #@{prefix}-home-intro .@{prefix}-widget {
-    width: 100%;
+    width: calc((100% - @home-widget-margin * 2) / 2);
+    margin: calc(@home-widget-margin / 2);
     height: 200px;
-    margin: 20px 0;
 }
 #@{prefix} h2.@{prefix}-home-title {
     width: 100%;
@@ -251,27 +243,19 @@ a.@{prefix}-control-icon:hover {
 }
 
 #@{prefix}-home-suggestions .@{prefix}-widget {
-    width: calc((100% - 40px * 2) / 3);
+    width: calc((100% - @home-widget-margin * 3) / 3);
+    margin: calc(@home-widget-margin / 2);
     height: 240px;
-    margin: calc(40px / 2);
-}
-#@{prefix}-home-suggestions .@{prefix}-widget:nth-child(3n + 1) {
-    margin-left: 0;
-}
-#@{prefix}-home-suggestions .@{prefix}-widget:nth-child(3n) {
-    margin-right: 0;
 }
 
 
+#@{prefix}-dashboard-results {
+    margin-left: calc(-@dashboard-widget-margin / 2);
+    margin-right: calc(-@dashboard-widget-margin / 2);
+}
 #@{prefix}-dashboard-results .@{prefix}-widget {
-    width: calc((100% - 20px * 1) / 2);
-    margin: calc(20px / 2);
-}
-#@{prefix}-dashboard-results .@{prefix}-widget:nth-child(2n + 1) {
-    margin-left: 0;
-}
-#@{prefix}-dashboard-results .@{prefix}-widget:nth-child(2n) {
-    margin-right: 0;
+    width: calc((100% - @dashboard-widget-margin * 2) / 2);
+    margin: calc(@dashboard-widget-margin / 2);
 }
 
 
@@ -296,30 +280,28 @@ a.@{prefix}-control-icon:hover {
 }
 
 
-.@{prefix}-faq-style {
-    background: #eee;
-    border: 1px solid #ddd;
-    padding: 12px;
-}
-
-
 /* Titles */
 
 #@{prefix}-filter-column > div.@{prefix}-page-control {
     display: flex;
     margin: 8px 0;
+    margin-left: -4px;
     
-    flex-wrap: wrap;
     justify-content: space-between;
 }
 #@{prefix}-filter-column > div.@{prefix}-page-control a,
 #@{prefix}-filter-column > div.@{prefix}-page-control span.@{prefix}-link {
-    max-width: 60%;
-    padding: 4px 8px;
+    display: block;
+    flex: 1;
+    margin: 0;
+    margin-left: 4px;
+    padding: 4px;
     height: 32px;
+    border: 1px solid #ddd;
     border-radius: 4px;
     line-height: 26px;
     font-size: 14px;
+    text-align: center;
 }
 #@{prefix}-filter-column > div.@{prefix}-page-control span.@{prefix}-hint {
     color: #333;
@@ -328,52 +310,6 @@ a.@{prefix}-control-icon:hover {
 #@{prefix}-filter-column > div.@{prefix}-page-control span.@{prefix}-hint:hover {
     background: #ddd;
 }
-
-/* FAQ */
-
-#@{prefix}-home-faq {
-    position: relative;
-}
-
-#@{prefix}-home-faq div.@{prefix}-home-faq-item {
-    position: absolute;
-    width: calc(100% - 12px * 2);
-    left: 12px;
-    z-index: 0;
-}
-
-#@{prefix}-home-faq a.@{prefix}-home-faq-close {
-    display: block;
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    z-index: 1;
-    cursor: pointer;
-}
-
-#@{prefix}-home-faq div h3 {
-    font-weight: normal;
-    font-size: 18px;
-    font-style: italic;
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-
-#@{prefix}-home-faq div p {
-    margin: 10px 0;
-    font-size: 16px;
-    line-height: 22px;
-}
-
-#@{prefix}-faq-widget ul {
-    margin-top: 16px;
-    font-style: italic;
-    color: #666;
-}
-#@{prefix}-faq-widget a {
-    cursor: pointer;
-}
-
 
 /* Preset widgets */
 
@@ -1070,5 +1006,49 @@ span.@{prefix}-divider {
     margin: 10px 0;
     width: 100%;
 }
+
+
+/* FAQ */
+
+#@{prefix} #@{prefix}-faq #@{prefix}-faq-header h2 {
+    margin: 10px 0;
+    font-size: 26px;
+    line-height: 39px;
+}
+#@{prefix} #@{prefix}-faq .@{prefix}-faq-item {
+    margin: 30px 0;
+}
+#@{prefix} #@{prefix}-faq .@{prefix}-faq-item > * {
+    margin: 10px 0;
+}
+#@{prefix} #@{prefix}-faq h4.@{prefix}-faq-item-title {
+    font-size: 20px;
+    font-weight: normal;
+    line-height: 30px;
+}
+#@{prefix} #@{prefix}-faq div.@{prefix}-faq-item-short {
+    padding-left: 10px;
+    max-width: 40em;
+    font-size: 16px;
+    line-height: 24px;
+}
+#@{prefix} #@{prefix}-faq div.@{prefix}-faq-item-long {
+    padding-left: 20px;
+    max-width: 40em;
+}
+
+
+#@{prefix}-dashboard-results .@{prefix}-faq-widget {
+    width: 100%;
+}
+#@{prefix}-dashboard-results .@{prefix}-faq-widget div.@{prefix}-faq-item-short {
+    padding: 0 4px;
+}
+
+
+.@{prefix}-faq-widget div.@{prefix}-faq-item-short {
+    padding: 0 4px;
+}
+
 
 

@@ -7,6 +7,8 @@ from typing import Union, List, Set, Tuple
 from pathlib import Path
 from collections import defaultdict, namedtuple
 
+import bleach
+import markdown
 import tornado.web
 from tornado.log import app_log
 
@@ -18,7 +20,22 @@ from firma.web import \
 
 CACHE_TTL_SHORT = 7 * 24 * 60 * 60    # One week
 CACHE_TTL_LONG = 30 * 24 * 60 * 60    # One month
-
+MARKDOWN_DEFAULT_TAGS = [
+    "a",
+    "p",
+    "ul",
+    "ol",
+    "li",
+    "em",
+    "img",
+    "strong",
+    "blockquote",
+]
+MARKDOWN_DEFAULT_ATTRIBUTES = [
+    "href",
+    "src",
+    "alt",
+]
 
 
 FilterSetItemGroup = namedtuple("FilterSetItemGroup", "value label items")
@@ -117,6 +134,19 @@ def format_title_bold_only(title):
     `"UK Countries of Concern"`
     """
     return " ".join(re.findall(r"\[(.+?)\]", title))
+
+
+
+def format_markdown_safe(text, tags=None, attributes=None):
+    if tags is None:
+        tags = MARKDOWN_DEFAULT_TAGS
+    if attributes is None:
+        attributes = MARKDOWN_DEFAULT_ATTRIBUTES
+
+    html = markdown.Markdown().convert(text)
+    clean = bleach.clean(html, tags=tags, attributes=attributes)
+    return clean
+
 
 
 
@@ -575,7 +605,6 @@ class FilterPartition(Filter):
 
 class CaatDashApplication(Application):
     def __init__(self, handlers, options, **settings):
-
         self.cache = None
         self.filters = {}
 
