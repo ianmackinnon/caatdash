@@ -1,4 +1,5 @@
 import re
+import sys
 import json
 import hashlib
 import urllib.parse
@@ -137,7 +138,13 @@ def format_title_bold_only(title):
 
 
 
-def format_markdown_safe(text, tags=None, attributes=None):
+def format_markdown_safe(text, tags=None, attributes=None, single=None):
+    """
+    `single`:
+      Process a single phrase; Remove outer paragraph tags,
+      so only inner markup is processed.
+    """
+
     if tags is None:
         tags = MARKDOWN_DEFAULT_TAGS
     if attributes is None:
@@ -145,8 +152,19 @@ def format_markdown_safe(text, tags=None, attributes=None):
 
     html = markdown.Markdown().convert(text)
     clean = bleach.clean(html, tags=tags, attributes=attributes)
-    return clean
 
+    if clean and single:
+        try:
+            assert "\n" not in clean
+            assert clean.startswith("<p>")
+            assert clean.endswith("</p>")
+        except AssertionError:
+            sys.stderr.write(repr(clean))
+            sys.stderr.flush()
+            raise
+        clean = clean[3:-4]
+
+    return clean
 
 
 
@@ -670,6 +688,13 @@ class BaseHandler(FirmaBaseHandler):
 
 
     # Query parameter handling
+
+    def href_url_root(self, text):
+        """
+        Filter for Mako.
+        """
+        return re.sub(r'href="/', f'href="{self.url_root}/', text)
+
 
     @staticmethod
     def get_raw_params(uri):
