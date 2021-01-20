@@ -9,13 +9,13 @@
     <div class="<%= prefix %>-widget-action <%= prefix %>-widget-action-full">
       <% if (faq.longAnswer) { %>
       <a
-        href="<%= resourceToUri('/faq#' + faq.key) %>"
+        href="<%= resourceUpdate('/faq#' + faq.key) %>"
         ><%= i18n.pgettext("dashboard-page", "See the full answer") %></a>
       <% } %>
     </div>
     <div class="<%= prefix %>-widget-action <%= prefix %>-widget-action-full">
       <a
-        href="<%= resourceToUri('/faq') %>"
+        href="<%= resourceUpdate('/faq') %>"
         ><%= i18n.pgettext("dashboard-page", "See all frequently asked questions") %></a>
     </div>
   </div>

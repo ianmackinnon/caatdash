@@ -692,6 +692,7 @@ class BaseHandler(FirmaBaseHandler):
     def href_url_root(self, text):
         """
         Filter for Mako.
+        Accepts Markdown HTML output and updates `a` `href` URLs.
         """
         return re.sub(r'href="/', f'href="{self.url_root}/', text)
 

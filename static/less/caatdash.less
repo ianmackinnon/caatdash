@@ -13,6 +13,16 @@
 @dashboard-widget-margin: 20px;
 @home-widget-margin: 40px;
 
+@caat-content-width-max: 1200px;
+@caat-content-width-desktop: 960px;
+@caat-margin-large: 32px;  // style.css: 2em;
+@caat-prose-font: 400 1em/1.5 "ibm-plex-serif","Trebuchet MS","Lucida Grande",Tahoma,sans-serif;
+
+@margin-large: @caat-margin-large;
+@margin-medium: (@caat-margin-large / 2);
+@margin-small: 6px;
+@margin-tiny: 2px;
+
 
 /* Undo main site rules */
 
@@ -27,23 +37,34 @@
     line-height: inherit;
 }
 
-header nav {
-    display: none;
-}
-#title-block {
-    width: 100%;
-    height: 32px;
-}
-#title-block > div.@{prefix}-page-subtitle {
-    display: none;
-}
-#title-block {
-    display: flex;
-}
-#title-block h1 {
-    width: auto;
+/* Page structure */
+
+#@{prefix}-body {
+    /* Used only when the app is not embedded. */
+    width: 960px;
+    margin: 0 auto;
 }
 
+#@{prefix} {
+    margin: 0;
+    padding: 0;
+    width: 960px;
+    font-family: Helvetica, Arial, sans-serif;
+    background-color: #FFFFFF;
+    color: #202020;
+    position: relative;
+    font-size: 14px;
+    line-height: 20px;
+
+    text-align: left;
+}
+
+#@{prefix} p,
+#@{prefix} li {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+}
 
 /* Generic rules */
 
@@ -73,6 +94,12 @@ header nav {
     padding: 0 3px;
 }
 
+#@{prefix} input[type='submit'] {
+    background: #eee;
+}
+
+
+
 i.@{prefix}-link,
 span.@{prefix}-link {
     color: @link-color;
@@ -88,13 +115,13 @@ span.@{prefix}-link:hover {
 #@{prefix} .@{prefix}-disabled a,
 #@{prefix} .@{prefix}-disabled:hover a {
     text-decoration: none;
-    color: #aaa;
+    color: #999;
     cursor: default;
     pointer-events: none;
 }
 .@{prefix}-disabled i.fa,
 .@{prefix}-disabled:hover i.fa {
-    color: #aaa;
+    color: #999;
 }
 
 .@{prefix}-unknown {
@@ -129,10 +156,10 @@ a.@{prefix}-control-icon:hover {
 
 
 
-/* Generic widgets and containers */
+/* Generic widgets and first-level containers */
 
 .@{prefix}-section {
-    margin: calc(40px / 2) 0;
+    margin: @margin-large 0;
 }
 .@{prefix}-section:after {
     content: none;
@@ -148,6 +175,56 @@ a.@{prefix}-control-icon:hover {
     border: 1px solid #ddd;
     border-radius: 4px;
 }
+
+
+/* Navigation */
+
+#@{prefix}-nav {
+    display: flex;
+    justify-content: space-between;
+    
+    margin: @margin-large 0;
+    padding: 0;
+}
+#@{prefix}-nav > div {
+    margin: 0;
+}
+
+#@{prefix}-nav ul {
+    display: flex;
+    margin: 0 calc(-@margin-medium / 2);  // Margin not shared in flex
+    padding: 0;
+    font-size: 16px;
+    line-height: 24px;
+}
+#@{prefix}-nav li {
+    display: block;
+    margin: 0 calc(@margin-medium / 2);  // Margin not shared in flex
+    list-style: none;
+}
+#@{prefix}-nav li.@{prefix}-selected {
+    border-bottom: 2px solid @color-caat-orange;
+}
+#@{prefix}-nav li.@{prefix}-selected a {
+    color: #666;
+}
+#@{prefix}-nav a {
+    display: block;
+    line-height: 24px;
+}
+
+
+#@{prefix}-nav a.@{prefix}-home {
+    color: white;
+    background: rgb(208, 104, 0);
+    border-radius: 4px;
+}
+#@{prefix}-nav a.@{prefix}-home:hover {
+    background: @link-color-half-hover;
+}
+
+
+
 
 
 /* Filters */
@@ -227,18 +304,16 @@ a.@{prefix}-control-icon:hover {
 
 #@{prefix}-home-intro,
 #@{prefix}-home-suggestions {
-    margin-left: calc(-@home-widget-margin / 2);
-    margin-right: calc(-@home-widget-margin / 2);
+    margin: calc(-@margin-large / 2);
 }
 #@{prefix}-home-intro .@{prefix}-widget {
-    width: calc((100% - @home-widget-margin * 2) / 2);
-    margin: calc(@home-widget-margin / 2);
+    width: calc((100% - @margin-large * 2) / 2);
+    margin: calc(@margin-large / 2);
     height: 200px;
 }
 #@{prefix} h2.@{prefix}-home-title {
     width: 100%;
-    line-height: 30px;
-    margin: 20px 0;
+    margin: @margin-large 0;
     text-align: center;
 }
 
@@ -751,7 +826,7 @@ div.@{prefix}-field > div.@{prefix}-field-input {
     margin: 0;
     margin-bottom: 6px;
     padding: 0 4px;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: normal;
     line-height: 32px;
 }
@@ -890,7 +965,7 @@ div.@{prefix}-field > div.@{prefix}-field-input {
     border: 0;
     padding-left: 2px;
     height: 28px;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .@{prefix}-result-bar-bar {
@@ -1010,10 +1085,11 @@ span.@{prefix}-divider {
 
 /* FAQ */
 
-#@{prefix} #@{prefix}-faq #@{prefix}-faq-header h2 {
-    margin: 10px 0;
-    font-size: 26px;
-    line-height: 39px;
+#@{prefix} #@{prefix}-faq ul {
+    padding-left: 20px;
+}
+#@{prefix} #@{prefix}-faq li {
+    list-style: default;
 }
 #@{prefix} #@{prefix}-faq .@{prefix}-faq-item {
     margin: 30px 0;
@@ -1029,22 +1105,28 @@ span.@{prefix}-divider {
 #@{prefix} #@{prefix}-faq div.@{prefix}-faq-item-short {
     padding-left: 10px;
     max-width: 40em;
-    font-size: 16px;
-    line-height: 24px;
+    font-size: 18px;
+    line-height: 1em;
 }
 #@{prefix} #@{prefix}-faq div.@{prefix}-faq-item-long {
     padding-left: 20px;
     max-width: 40em;
+    font-size: 16px;
+    line-height: 1em;
+}
+#@{prefix} #@{prefix}-faq div.@{prefix}-faq-item-long p {
+    margin: 8px 0;
 }
 
 
 #@{prefix}-dashboard-results .@{prefix}-faq-widget {
     width: 100%;
 }
+#@{prefix}-dashboard-results .@{prefix}-faq-widget h3 {
+}
 #@{prefix}-dashboard-results .@{prefix}-faq-widget div.@{prefix}-faq-item-short {
     padding: 0 4px;
 }
-
 
 .@{prefix}-faq-widget div.@{prefix}-faq-item-short {
     padding: 0 4px;
