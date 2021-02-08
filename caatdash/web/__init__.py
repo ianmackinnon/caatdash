@@ -1,6 +1,7 @@
 import re
 import sys
 import json
+import gettext
 import hashlib
 import urllib.parse
 from copy import deepcopy
@@ -40,6 +41,11 @@ MARKDOWN_DEFAULT_ATTRIBUTES = [
 
 
 FilterSetItemGroup = namedtuple("FilterSetItemGroup", "value label items")
+
+
+
+class QueryRewriteContinueException(Exception):
+    pass
 
 
 
@@ -165,6 +171,13 @@ def format_markdown_safe(text, tags=None, attributes=None, single=None):
         clean = clean[3:-4]
 
     return clean
+
+
+
+def format_i18n(template, values):
+    template = template.replace("<{", "{")
+    template = template.replace("}>", "}")
+    return template.format(**values)
 
 
 
@@ -507,6 +520,8 @@ class FilterGroupedSet(Filter):
                 value_set.update(group["items"])
                 title = group.get("title", None)
                 if title:
+                    if callable(title):
+                        title = title(handler.i18n)
                     label_set.add(FilterSetItemGroup(value, title, tuple(group["items"])))
             elif self.null_value and value == self.null_value:
                 value_set.add(None)
@@ -624,6 +639,13 @@ class FilterPartition(Filter):
 class CaatDashApplication(Application):
     def __init__(self, handlers, options, **settings):
         self.cache = None
+
+        self.faq = None
+        self.faq_mtime = None
+
+        self.i18n = None
+        self.i18n_options = None
+
         self.filters = {}
 
         super().__init__(handlers, options, **settings)
@@ -660,6 +682,57 @@ class CaatDashApplication(Application):
         return status
 
 
+    # FAQ
+
+    def load_faq(self):
+        path = self.path / "static/json/faq.json"
+        mtime = path.stat().st_mtime
+
+        if self.faq_mtime != mtime:
+            self.faq = []
+            for key, value in json.loads(path.read_text()).items():
+                value["key"] = key
+                self.faq.append(value)
+
+            self.faq_mtime = mtime
+            app_log.warning("Loaded `%s`", path)
+
+
+    # I18n
+
+    def init_i18n(self, lang_labels, lang_default):
+        domain = self.app_prefix
+        i18n_path = self.path / "static/i18n"
+
+        self.i18n = {}
+        self.i18n_options = []
+        fail = False
+        for lang_path in i18n_path.glob(f"*/LC_MESSAGES/{domain}.mo"):
+            lang = lang_path.parent.parent.name
+
+            try:
+                label = lang_labels[lang]
+            except:
+                app_log.info(
+                    f"Translation found but not enabled: `{lang}`: `{lang_path.absolute()}`.")
+                continue
+
+            self.i18n[lang] = gettext.translation(domain, i18n_path, languages=[lang])
+            self.i18n_options.append({
+                "slug": lang,
+                "label": label,
+            })
+            if lang == lang_default:
+                self.i18n_options[-1]["default"] = True
+
+        if fail:
+            sys.exit(1)
+
+        self.i18n_options.sort(key=lambda x: x["label"])
+
+        self.add_stat("Loaded translations", ", ".join(sorted(list(self.i18n))))
+
+
 
 
 class BaseHandler(FirmaBaseHandler):
@@ -688,6 +761,119 @@ class BaseHandler(FirmaBaseHandler):
 
 
     # Query parameter handling
+
+    def query_rewrite(
+            self,
+            path: Union[str, None] = None,
+            query: Union[dict, None] = None,
+            replace_query: Union[bool, None] = None
+    ):
+        """
+        If `path` is `None`, the current resource path will be preserved
+        `path` may not contain a query string
+
+        `query` appends to the current query string by default.
+        If `query` is `None`, the current query string will be preserved
+
+        if `replace_query` is truthy the current query will be ignored.
+        """
+
+        query_string_altered = None
+
+
+        fragment = None
+        if path:
+            parts = urllib.parse.urlparse(path)
+            assert not parts.scheme
+            assert not parts.netloc
+            assert not parts.params
+
+            path = parts.path
+            # query_s = parts.query
+            fragment = parts.fragment
+
+
+        def quote_key_value(key, value):
+            key = urllib.parse.quote_plus(str(key).encode("utf-8"))
+            value = ",".join(
+                [urllib.parse.quote_plus(str(v).encode("utf-8"))
+                 for v in value])
+            return "%s=%s" % (key, value)
+
+
+        args = {}
+        if replace_query:
+            args = self.get_request_args_default()
+        else:
+            args = self.request_args.copy()
+
+        query_parts = []
+
+        if query:
+            # `args` is guaranteed to have all permissable keys.
+            for key in args:
+                if key in query:
+                    args[key] = query[key]
+
+        # Set filters & Partition Filters & Date filters
+
+        all_keys = set()
+        for key, filter_ in self.filters.items():
+            query_parts += filter_.query_params(args)
+            all_keys |= filter_.keys()
+
+
+        for key, value in list(args.items()):
+            if key in all_keys:
+                continue
+
+            if hasattr(value, "pop") and not value:
+                # Empty iterable
+                continue
+
+            if value is None:
+                continue
+
+            if not hasattr(value, "pop"):
+                # Make all values iterable
+                value = [value]
+
+            try:
+                value = self.query_rewrite_key(key, value)
+            except AttributeError:
+                pass
+
+            if not value:
+                continue
+
+            query_parts.append(quote_key_value(key, value))
+
+        url = self.url_root
+
+
+        if path is None:
+            path = self.request.path
+        elif "?" in path:
+            raise Exception("Path may not contain a query string, '%s'." % repr(path))
+
+        if not path.startswith("/"):
+            raise Exception("Path must start with /, '%s'." % repr(path))
+
+        url += path
+        if len(url) > 1 and url.endswith("/"):
+            url = url[:-1]
+
+        if query_parts:
+            url += "?" + "&".join(query_parts)
+
+        if not url and "?" in self.request.uri:
+            url += "?"
+
+        if fragment:
+            url += "#" + fragment
+
+        return url
+
 
     def href_url_root(self, text):
         """
@@ -781,6 +967,11 @@ class BaseHandler(FirmaBaseHandler):
             value = args[-1]
             if value in option_list:
                 return value
+
+            raise tornado.web.HTTPError(
+                404,
+                "Value for argument `%s` (`%s`) not in options (`%s`)" % (
+                    name, value, repr(set(option_list))))
 
         return default
 

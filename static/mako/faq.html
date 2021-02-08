@@ -1,0 +1,25 @@
+<%inherit file="base.html" />
+
+<section id="${prefix}-faq" class="${prefix}-section">
+  <div id="${prefix}-faq-list">
+    %for item in faq:
+    <%
+      # Prevent gettext from registering strings in quotes:
+      title = item["title"]  
+      short_answer = item["shortAnswer"]
+      long_answer = item.get("longAnswer", None)
+%>    
+    <div class="${prefix}-faq-item">
+      <a name="${item["key"]}"></a>
+      <h4 class="${prefix}-faq-item-title">${i18n.pgettext("faq-title", title)}</h4>
+      <div class="${prefix}-faq-item-short">${i18n.pgettext("faq-short-answer", short_answer) | n, format_markdown_safe, href_url_root}</div>
+      %if longAnswer:
+      <div class="${prefix}-faq-item-long">${i18n.pgettext("faq-long-answer", long_answer) | n, format_markdown_safe, href_url_root}</div>
+      %endif
+    </div>
+    
+    %endfor
+  </div>
+  
+</section>
+

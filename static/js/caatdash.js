@@ -62,10 +62,10 @@
       var openHint, clearHint;
 
       if (filter.text.hint) {
-        openHint = app.i18n.pgettext("filter-label", "Filter by <{attribute}>")
-          .replace("<{attribute}>", app.i18n.pgettext("filter-label", filter.text.hint));
-        clearHint = app.i18n.pgettext("filter-label", "Clear <{attribute}> filters")
-          .replace("<{attribute}>", app.i18n.pgettext("filter-label", filter.text.hint));
+        openHint = app.i18n.pgettext("filter-label", "Filter by <{facet}>")
+          .replace("<{facet}>", app.i18n.pgettext("filter-label", filter.text.hint));
+        clearHint = app.i18n.pgettext("filter-label", "Clear <{facet}> filters")
+          .replace("<{facet}>", app.i18n.pgettext("filter-label", filter.text.hint));
 
       }
 
@@ -191,8 +191,8 @@
 
     if (!_.isNil(_.get(filter, "text.placeholderNames"))) {
       placeholder = _.map(filter.text.placeholderNames, function (v) {
-        if (filterSpec.i18nContextOptionName) {
-          return app.i18n.pgettext(filterSpec.i18nContextOptionName, v);
+        if (_.get(filterSpec, "i18nContext.label")) {
+          return app.i18n.pgettext(filterSpec.i18nContext.label, v);
         }
         return v;
       }).join(", ");
@@ -338,25 +338,33 @@
 
     filter.alwaysOpen = filterSpec.alwaysOpen;
 
-    filter.autocompleteInit = filterSpec.autocompleteInit;
-    filter.autocompleteClear = filterSpec.autocompleteClear;
-    filter.autocompleteSource = function (request, callback) {
-      filterSpec.search(request.term, request.value, app, control, filter, callback);
-    };
-    filter.itemLabel = filterSpec.itemLabel;
     filter.expandFilters = filterSpec.expandFilters;
     filter.allowSearchText = filterSpec.allowSearchText;
 
+    filter.autocompleteInit = filterSpec.autocompleteInit;
+    filter.autocompleteClear = filterSpec.autocompleteClear;
+
+    if (_.isFunction(filterSpec.staticSource)) {
+      filter.staticSource = filterSpec.staticSource(app, filterSpec);
+      filter.itemLabel = this.itemLabelStatic;
+      filter.autocompleteSource = this.autocompleteSourceStatic;
+    } else {
+      filter.itemLabel = filterSpec.itemLabel;
+      filter.autocompleteSource = function (request, callback) {
+        filterSpec.search(request.term, request.value, app, control, filter, callback);
+      };
+    }
+
     if (!_.isNil(_.get(filter, "text.placeholderNames"))) {
       placeholder = _.map(filter.text.placeholderNames, function (v) {
-        if (filterSpec.i18nContextOptionName) {
-          return app.i18n.pgettext(filterSpec.i18nContextOptionName, v);
+        if (_.get(filterSpec, "i18nContext.label")) {
+          return app.i18n.pgettext(filterSpec.i18nContext.label, v);
         }
         return v;
       }).join(", ");
     }
 
-    var $filter = $(app.render("filter-set.html", {
+    var $filter = $(app.render("caatdash-filter-set.html", {
       label: filter.text.label,
       key: filter.key,
       placeholder: placeholder,
@@ -426,6 +434,35 @@
       return params;
     },
 
+    itemLabelStatic: function (item) {
+      var source = this.staticSource;
+      var match = _.find(source, function (v) {
+        return v.slug == item.value;
+      });
+      if (_.isNil(match)) {
+        console.error("`item` has no `label`:", item);
+        throw "";
+      }
+
+      return match.label;
+    },
+
+    autocompleteSourceStatic: function (request, callback) {
+      var source = _.map(this.staticSource, function (v, i) {
+        return {
+          label: v.label,
+          value: v.slug,
+        };
+      });
+
+      var result = CaatDash.prototype.filterSearch(source, request.term, {
+        exclude: request.value,
+        limit: 16
+      });
+
+      callback(result);
+    },
+
     addItem: function (item) {
       var filter = this;
 
@@ -465,16 +502,16 @@
       var filter = this;
       var app = filter.app;
 
-      var label = null;
+      var label = item.label;
 
-      if (_.isFunction(filter.itemLabel)) {
-        label = filter.itemLabel(item, filter);
-      } else if (!_.isNil(item.label)) {
-        label = item.label;
-      } else {
+      if (_.isNil(label) &&_.isFunction(filter.itemLabel)) {
+        label = filter.itemLabel(item);
+      }
+      if (_.isNil(label)) {
         label = item.value;
       }
-      var $option = $(app.render("filter-set-item.html", {
+
+      var $option = $(app.render("caatdash-filter-set-item.html", {
         label: label
       }));
       var $remove = $option.find(app.selector(
@@ -644,7 +681,7 @@
     filter.allValue = filterSpec.allValue;
     filter.defaultValue = filterSpec.defaultValue;
 
-    var $filter = $(app.render("filter-partition.html", {
+    var $filter = $(app.render("caatdash-filter-partition.html", {
       label: filter.text.label,
       key: filter.key
     }));
@@ -680,7 +717,7 @@
       }).fromPairs().value());
 
       _.each(filter.items, function (item, i) {
-        var $item = $(app.render("field-partition-item.html", item));
+        var $item = $(app.render("caatdash-field-partition-item.html", item));
         var $input = $item.find("input");
         var defaultState = item.selected;
         $input.prop("checked", defaultState);
@@ -904,9 +941,276 @@
       console.log.apply(console, Array.prototype.slice.call(arguments, 1));
     },
 
+    // Format functions
+
+    formatTitleStrong: function (text) {
+      if (_.isNil(text)) {
+        return text;
+      }
+      return text
+        .replace(/\[/g, "<strong>")
+        .replace(/\]/g, "</strong>")
+      ;
+    },
+
+    formatTitleClean: function (text) {
+      if (_.isNil(text)) {
+        return text;
+      }
+      return text
+        .replace(/\[/g, "")
+        .replace(/\]/g, "")
+      ;
+    },
+
+    formatLabel: function (name, description) {
+      if (description) {
+        return name + " ‒ " + description;
+      }
+      return name;
+    },
+
+    formatCommas: function (n) {
+      var s = "" + n;
+      var o = "";
+
+      if (n === null) {
+        return null;
+      }
+
+      while (s.length > 3) {
+        o = "," + s.substring(s.length - 3, s.length) + o;
+        s = s.substring(0, s.length - 3);
+      }
+      return s + o;
+    },
+
+    formatAbbreviate: function (n) {
+      var s = "" + n;
+      var o = "";
+      var p = null;
+      var levels = [
+        ["bn", 9],
+        ["m", 6],
+        ["k", 3]
+      ];
+
+      if (n === null) {
+        return null;
+      }
+
+      _.each(levels, function (level, i) {
+        var suffix = level[0];
+        var v = level[1];
+
+        if (n >= Math.pow(10, v + 1)) {
+          p = n / Math.pow(10, v);
+        } else if (n + 5 * Math.pow(10, v - 2) >= Math.pow(10, v + 1)) {
+          p = (n + 5 * Math.pow(10, v - 2)) / Math.pow(10, v);
+        }
+
+        if (p) {
+          p = p.toFixed(0) + suffix;
+          return false;
+        }
+
+        if (n >= Math.pow(10, v)) {
+          p = n / Math.pow(10, v);
+        } else if (n + 5 * Math.pow(10, v - 4) >= Math.pow(10, v)) {
+          p = (n + 5 * Math.pow(10, v - 4)) / Math.pow(10, v);
+        }
+
+        if (p) {
+          p = p.toFixed(1) + suffix;
+          return false;
+        }
+      });
+
+      return p || ("" + n);
+    },
+
+    // Search functions
+
+    filterSearch: function (data, searchText, options) {
+      var searchParts = latinize(searchText).toLowerCase().split(/\s+/);
+      var hits = [];
+      var reBoundary = "(?:^|\\s)"; // https://stackoverflow.com/a/10590516/201665
+
+      options = _.extend({
+        exclude: null,
+        limit: null
+      }, options);
+
+      _.each(data, function (v, i) {
+        var score = 0;
+        var text = (!_.isNil(v.label)) ? v.label : v.value;
+
+        text = latinize(text).toLowerCase();
+
+        _.each(searchParts, function (part) {
+          var match = text.match(new RegExp(reBoundary + part, "i"));
+          if (match) {
+            score += 2 * match.length;
+          } else {
+            match = text.match(new RegExp(part, "i"));
+            if (match) {
+              score += 1 * match.length;
+            }
+          }
+        });
+
+        if (score) {
+          hits.push({
+            "score": score,
+            "item": v
+          });
+        }
+      });
+
+      hits = _(hits);
+
+      if (options.exclude) {
+        var excludeValue = _.map(options.exclude, "value");
+        // Remove exclude and move above.
+        hits = hits.filter(function (v, i) {
+          return !_.includes(excludeValue, v.item.value);
+        });
+      }
+
+      hits = hits.orderBy(
+        [
+          "score",
+          function (v) {
+            return v.item.sort;
+          }
+        ], ["desc", "asc"]
+      ).map("item");
+
+      if (options.limit) {
+        hits = hits.slice(0, options.limit);
+      }
+
+      hits = hits.value();
+
+      return hits;
+    },
+
+    // Autocomplete functions
+
+    autoFocusOnInput: function (event) {
+      var $input = $(event.target);
+      $input.autocomplete("option", "autoFocus", !!$input.val());
+    },
+
+    openOnFocus: function (event) {
+      var $input = $(event.target);
+      $input.autocomplete("search");
+    },
+
+    initAcChange: function ($input, callback) {
+      $input.on("autocompleteselect autocompletechange", function (event, ui) {
+        // `ui.item` is `null` if value is not in source.
+        var value = ui.item ? ui.item.value : null;
+        if (event.type == "autocompletechange" && value) {
+          // `autocompletechange` is only required to clear input.
+          return;
+        }
+        callback(value);
+      });
+    },
+
+    updateWithValue: function ($input, value, name) {
+      // returns `true` if value was updated.
+
+      if (_.isNil(value)) {
+        return false;
+      }
+
+      if (!_.includes($input.autocomplete("option", "source"), value)) {
+        return false;
+      }
+
+      $input.val(value);
+
+      return true;
+    },
+
+    // Select functions
+
+    sortSelectInit: function ($parent, sortOptions, set, setter) {
+      var app = this;
+
+      if (sortOptions && sortOptions.length > 1) {
+        var $sortTitle = $parent.find(app.selector(
+          ".<%= prefix %>-result-bar-sort-title"));
+        var $sortSelect = $parent.find(app.selector(
+          ".<%= prefix %>-result-bar-sort-ctrl select"));
+
+        $sortTitle.on("click", function (event) {
+          $sortSelect.focus();
+        });
+
+        $sortSelect.on("change", function (event) {
+          set("index", this.value, setter + " select");
+        });
+      }
+    },
+
+    // URI functions
+
+    uriToResource: function (uri, options) {
+      return firma.uriToResource(this.uri.root, uri, options);
+    },
+
+    resourceToUri: function (resource) {
+      return firma.resourceToUri(this.uri.root, resource);
+    },
+
+    uriToParams: function (uri) {
+      var params;
+
+      if (_.isNil(uri)) {
+        uri = window.location;
+      }
+
+      params = _(URI(uri).search(true)).mapValues(function (v, k) {
+        return v.trim();
+      }).pickBy().value();
+
+      params = _.isEmpty(params) ? null : params;
+
+      return params;
+    },
+
+    paramsToResource: function (params, path) {
+      var app = this;
+
+      var resource;
+      if (_.isNil(path)) {
+        path = firma.urlRemoveRoot(app.uri.root, URI(window.location).resource());
+      }
+
+      resource = URI(path).search(params).resource();
+      resource = resource.replace(new RegExp("%2C", "gi"), ",");
+      resource = resource.replace(new RegExp("%20", "gi"), "+");
+
+      return resource;
+    },
+
+    faqResourceUpdate: function (resource) {
+      var app = this;
+      var params = app.uriToParams();
+      params = _.pick(params, ["lang"]);
+      return app.resourceToUri(app.paramsToResource(params, resource));
+    },
+
     // i18n functions
 
     setLanguage: function (lang, domain) {
+      if (_.isNil(this.data.i18n)) {
+        console.error("I18n data at `data.i18n` is not defined.");
+      }
+
       var data;
 
       if (lang === this.lang) {
@@ -916,6 +1220,9 @@
       if (_.isNil(lang)) {
         this.i18n = {
           pgettext: function (context, message) {
+            if (_.isNil(message)) {
+              console.error("pgettext message is nil.");
+            }
             return message;
           }
         };
@@ -936,6 +1243,12 @@
       }
 
       this.lang = lang;
+    },
+
+    i18nFilter: function (context, start) {
+      return _(this.i18n.options.locale_data[this.prefix]).pickBy(function (v, k) {
+        return _.startsWith(k, context + "\u0004" + (start || ""));
+      }).value();
     },
 
     // AJAX functions
@@ -1198,6 +1511,18 @@
         }
         control.children.push(filter);
       });
+    },
+
+    // Page component functions
+
+    insertHomeFaq: function () {
+      var app = this;
+      var $faq = $(app.selector("#<%= prefix %>-home-faq"));
+      var $faqWidget = $(app.render("caatdash-widget-faq.html", {
+        faq: app.faqItem(),
+        resourceUpdate: _.bind(app.faqResourceUpdate, app)
+      }));
+      $faq.replaceWith($faqWidget);
     },
 
     // Initialization functions

@@ -13,6 +13,7 @@
 @dashboard-widget-margin: 20px;
 @home-widget-margin: 40px;
 
+@color-caat-orange: #D06800;
 @caat-content-width-max: 1200px;
 @caat-content-width-desktop: 960px;
 @caat-margin-large: 32px;  // style.css: 2em;
@@ -37,6 +38,8 @@
     line-height: inherit;
 }
 
+/* Generic */
+
 /* Page structure */
 
 #@{prefix}-body {
@@ -59,12 +62,35 @@
     text-align: left;
 }
 
+#@{prefix} h1,
+#@{prefix} h2 {
+    font-size: 20px;
+    margin: 0;
+}
+
 #@{prefix} p,
 #@{prefix} li {
     font-family: Helvetica, Arial, sans-serif;
     font-size: 14px;
     line-height: 20px;
 }
+
+/* Everything */
+
+#@{prefix} abbr {
+    border:0;
+    border-bottom:1px;
+    border-style:dotted;
+}
+
+#@{prefix} abbr.no-underline {
+    border-bottom:0px;
+}
+
+#@{prefix} .weak {
+    opacity: 0.5;
+}
+
 
 /* Generic rules */
 
@@ -1085,6 +1111,11 @@ span.@{prefix}-divider {
 
 /* FAQ */
 
+#@{prefix}-home-intro h3.@{prefix}-faq-item-title {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
 #@{prefix} #@{prefix}-faq ul {
     padding-left: 20px;
 }
@@ -1118,12 +1149,10 @@ span.@{prefix}-divider {
     margin: 8px 0;
 }
 
-
 #@{prefix}-dashboard-results .@{prefix}-faq-widget {
     width: 100%;
 }
-#@{prefix}-dashboard-results .@{prefix}-faq-widget h3 {
-}
+#@{prefix}-dashboard-results .@{prefix}-faq-widget h3 {}
 #@{prefix}-dashboard-results .@{prefix}-faq-widget div.@{prefix}-faq-item-short {
     padding: 0 4px;
 }

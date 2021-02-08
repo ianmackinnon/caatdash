@@ -1,0 +1,9 @@
+<label class="<%= prefix %>-filter-option">
+  <div class="<%= prefix %>-filter-option-control">
+    <div class="<%= prefix %>-filter-option-text"><%= i18n.pgettext("filter-label", label) %></div>
+    <input type="checkbox" value="<%= key %>" disabled>
+  </div>
+  <% if (desc) { %>
+  <div class="<%= prefix %>-filter-option-desc"><%= i18n.pgettext("filter-label", desc) %></div>
+  <% } %>
+</label>

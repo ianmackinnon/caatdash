@@ -45,6 +45,9 @@ setuptools.setup(
     dependency_links=[
         "git+https://github.com/ianmackinnon/firma.git#egg=firma",
     ],
+    scripts=[
+        "scripts/po2json",
+    ],
     python_requires='>=3',
     setup_requires=[],
     tests_require=[],
