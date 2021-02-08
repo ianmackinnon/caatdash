@@ -1,13 +1,13 @@
 <div class="<%= prefix %>-widget <%= prefix %>-result-widget <%= prefix %>-faq-widget">
 
   <div class="<%= prefix %>-faq-widget-head">
-    <h3 class="${prefix}-faq-item-title"><%= faq.title %></h3>
-    <div class="${prefix}-faq-item-short"><%= faq.shortAnswer %></div>
+    <h3 class="${prefix}-faq-item-title"><%= i18n.pgettext("faq-title", faq.title) %></h3>
+    <div class="${prefix}-faq-item-short"><%= i18n.pgettext("faq-short-answer", faq.shortAnswer) %></div>
   </div>
 
   <div class="<%= prefix %>-result-widget-action-list">
     <div class="<%= prefix %>-widget-action <%= prefix %>-widget-action-full">
-      <% if (faq.longAnswer) { %>
+      <% if (faq.longAnswer && i18n.pgettext("faq-long-answer", faq.longAnswer)) { %>
       <a
         href="<%= resourceUpdate('/faq#' + faq.key) %>"
         ><%= i18n.pgettext("dashboard-page", "See the full answer") %></a>

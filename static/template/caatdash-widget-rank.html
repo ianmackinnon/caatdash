@@ -1,7 +1,7 @@
 <div class="<%= prefix %>-widget <%= prefix %>-result-widget <%= prefix %>-result-rank-widget <%= prefix %>-widget-rank-<%= name %>">
 
   <div class="<%= prefix %>-result-widget-head">
-    <h3><%= title %></h3>
+    <h3><%= titleFormat(title) %></h3>
     <% if (typeof(subtitle) != "undefined") { %>
     <div class="<%= prefix %>-result-widget-subtitle"><%= subtitle %></div>
     <% } %>
@@ -39,8 +39,8 @@
 
   <div class="<%= prefix %>-result-widget-bar-title">
     <div class="<%= prefix %>-result-bar">
-      <div class="<%= prefix %>-result-bar-text"><%= itemLabel %></div>
-      <div class="<%= prefix %>-result-bar-value"><%= valueLabel || "" %></div>
+      <div class="<%= prefix %>-result-bar-text"><%= titleFormat(itemLabel) %></div>
+      <div class="<%= prefix %>-result-bar-value"><%= titleFormat(valueLabel || "") %></div>
     </div>
   </div>
 

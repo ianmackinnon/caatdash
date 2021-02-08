@@ -1,0 +1,33 @@
+<%inherit file="base.html" />
+
+<section id="${prefix}-filtered-results" class="${prefix}-section ${prefix}-column-container">
+  
+  <div id="${prefix}-filter-column">
+    <div class="${prefix}-filter-column-header ${prefix}-filter-header" style="display: none;">
+      <h3>${i18n.pgettext("page-dashboard", "Filter results")}</h3>
+      <div class="${prefix}-filter-control">
+        <a id="${prefix}-filter-column-reset" class="${prefix}-filter-clear" title=${repr(i18n.pgettext("page-dashboard", "Reset all filters")) | n} style="display: none"><i class="fas fa-times-circle"></i></a>
+      </div>
+    </div>
+    
+    <div id="${prefix}-dashboard-filters" style="display: none;"></div>
+  </div>
+
+  <div id="${prefix}-result-column">
+    <div id="${prefix}-result-header">
+      <h2></h2>
+      <ul id="${prefix}-result-notes"></ul>
+    </div>
+    
+    <div id="${prefix}-result-loading">
+      <i class="fa fa-spinner fa-spin"></i>
+    </div>
+
+    <div id="${prefix}-result-no-results">${i18n.pgettext("page-dashboard", "No results match this search.")}</div>
+    <div id="${prefix}-result-error"></div>
+
+    <div id="${prefix}-dashboard-results" class="${prefix}-column-container">
+    </div>
+  </div>
+
+</section>

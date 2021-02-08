@@ -3,7 +3,7 @@
   <% _.each(graphs, function (item) { %>
 
   <div class="<%= prefix %>-result-widget-head <%= prefix %>-result-widget-head-<%= item.key %>">
-    <h3><%= item.title %></h3>
+    <h3><%= titleFormat(item.title) %></h3>
   </div>
   
   <div class="<%= prefix %>-widget-timeline <%= prefix %>-widget-timeline-<%= item.key %>">
