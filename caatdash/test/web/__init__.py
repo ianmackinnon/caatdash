@@ -5,9 +5,14 @@ import collections
 from typing import Iterable, Union, Dict
 
 import pytest
+
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.keys import Keys
+
+from firma.browser import \
+    RequiredElementNotFoundError
+
 from caatdash.web import format_title_plain
 
 
@@ -24,6 +29,10 @@ JAVASCRIPT_ERROR_URL_IGNORE = {
     "facebook",
     "civi-int",
 }
+
+
+
+# Generic utility functions
 
 
 
@@ -118,6 +127,7 @@ def await_state_prefix(
 
 
 # CAAT Dash browser UI functions
+
 
 
 def filter_set_get_filter(
@@ -251,6 +261,30 @@ def filter_set_search(
             [v.text for v in option_list] if option_list else None))
 
         raise
+
+
+
+def assert_nav_links(selenium, base_url, build_url, parse_url, expected):
+    for item in expected:
+        try:
+            parent = selenium.find(item["selector"], wait=False, required=True)
+            link = selenium.find("a", node=parent, wait=False, required=True)
+            if "resource" in item:
+                assert link.is_displayed()
+                href = link.get_attribute("href")
+                assert href
+                parts = parse_url(href, base_url)
+                href_exp = build_url(base_url, item["resource"], params=item["params"])
+                parts_exp = parse_url(href_exp, base_url)
+                assert parts == parts_exp
+            else:
+                assert not link.is_displayed()
+        except (AssertionError, RequiredElementNotFoundError):
+            LOG.error(item)
+            LOG.error(f"text:     {repr(link.text)}")
+            LOG.error(f"expected: {repr(parts_exp)}")
+            LOG.error(f"found:    {repr(parts)}")
+            raise
 
 
 

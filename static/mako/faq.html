@@ -13,7 +13,7 @@
       <a name="${item["key"]}"></a>
       <h4 class="${prefix}-faq-item-title">${i18n.pgettext("faq-title", title)}</h4>
       <div class="${prefix}-faq-item-short">${i18n.pgettext("faq-short-answer", short_answer) | n, format_markdown_safe, href_url_root}</div>
-      %if longAnswer:
+      %if long_answer:
       <div class="${prefix}-faq-item-long">${i18n.pgettext("faq-long-answer", long_answer) | n, format_markdown_safe, href_url_root}</div>
       %endif
     </div>
