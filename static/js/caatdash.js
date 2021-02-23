@@ -1207,10 +1207,6 @@
     // i18n functions
 
     setLanguage: function (lang, domain) {
-      if (_.isNil(this.data.i18n)) {
-        console.error("I18n data at `data.i18n` is not defined.");
-      }
-
       var data;
 
       if (lang === this.lang) {
@@ -1228,6 +1224,10 @@
         };
       } else {
         data = this.data.i18n[lang];
+        if (_.isNil(this.data.i18n)) {
+          console.error("I18n data at `data.i18n` is not defined.");
+        }
+
         if (_.isNil(data)) {
           console.error("No translation data for language `" + lang + "`.");
           throw "";
@@ -1479,6 +1479,248 @@
 
       this.log("scroll", "restore", scroll.x, scroll.y);
       window.scrollTo(scroll.x, scroll.y);
+    },
+
+    // Graphic functions
+
+    d3BarChartVertical: function (d3Parent, data, options) {
+      var yMax = _(data.bars).map(function (v, i) {
+        return v.y;
+      }).max();
+      var iMax = _(data.bars).findIndex(["y", yMax]);
+      var labelHeight = data.heightLabel || 0;
+      var d3Group = d3Parent.append("g");
+      var d3GraphGroup = d3Group.append("g");
+      var xMargin = 1;
+      var dataWidth = data.width - 2 * xMargin * data.bars.length;
+      var x = 0;
+      var graphCtrl = {
+        showBar: function (iOver) {
+          if (_.isNil(iOver)) {
+            var n = data.bars.length - 1;
+            _.forEach(data.bars, function (bar, i) {
+              bar.d3BarLabel.style("visibility", "hidden");
+              bar.d3BarValue.style("visibility", "hidden");
+            });
+            data.bars[0].d3BarLabel.style("visibility", "visible");
+            data.bars[n].d3BarLabel.style("visibility", "visible");
+            data.bars[iMax].d3BarValue.style("visibility", "visible");
+            if (
+              data.bars[iMax].legendSpan[0] > data.bars[0].legendSpan[1] &&
+                data.bars[iMax].legendSpan[1] < data.bars[n].legendSpan[0]
+            ) {
+              // Label of highest value fits between first and last labels.
+              data.bars[iMax].d3BarLabel.style("visibility", "visible");
+            }
+          } else {
+            _.forEach(data.bars, function (bar, i) {
+              if (i == iOver) {
+                bar.d3BarLabel.style("visibility", "visible");
+                bar.d3BarValue.style("visibility", "visible");
+              } else {
+                bar.d3BarLabel.style("visibility", "hidden");
+                bar.d3BarValue.style("visibility", "hidden");
+              }
+            });
+          }
+        }
+      };
+
+      var averageBarWidth = dataWidth / data.bars.length;
+      var barWidthCount = 0;
+      var legendWidthCount = 0;
+
+      _.forEach(data.bars, function (bar, i) {
+        var barWidth = dataWidth * bar.x / data.xTotal;
+        var barHeight;
+        var barX = (x + xMargin);
+        var legendWidth;
+        var distLeft = barX + barWidth / 2;
+        var distRight = data.width - distLeft;
+        var valueText = _.isNil(bar.y) ? "-" : data.format(bar.y);
+        var d3BarGroup = d3GraphGroup.append("g").attr({
+          "class": "caatdash-bar-graph-group",
+          "transform": "translate(" + barX + ", 0)",
+        });
+
+        d3BarGroup.append("rect").attr({
+          "class": "caatdash-bar-graph-target",
+          "x": 0,
+          "y": data.heightLabel,
+          "width": barWidth,
+          "height": data.heightBar,
+        }).on("mouseenter", function (event) {
+          if (_.isFunction(options.enterBarCallback)) {
+            options.enterBarCallback(i);
+          }
+        });
+
+        if (yMax && !_.isNil(bar.y)) {
+          barHeight = bar.y ? Math.max(data.heightBar * bar.y / yMax, 1) : 0;
+          d3BarGroup.append("rect").attr({
+            "class": options.barClass,
+            "x": 0,
+            "y": data.heightLabel + data.heightBar - barHeight,
+            "width": barWidth,
+            "height": barHeight
+          });
+        }
+
+        bar.d3BarLabel = d3BarGroup.append("g").attr({
+          "visibility": "hidden",
+        });
+
+        bar.d3BarLabel.append("rect").attr({
+          "class": "caatdash-bar-graph-base",
+          "x": 0,
+          "y": data.heightLabel + data.heightBar + 1,
+          "width": barWidth,
+          "height": 2,
+        });
+
+        var d3BarLabelText = bar.d3BarLabel.append("text").attr({
+          "x": barWidth / 2,
+          "y": data.heightLabel + data.heightBar + data.heightLegend - 5,
+          "text-anchor": "middle",
+        }).text(bar.label);
+
+        bar.d3BarValue = d3BarGroup.append("text").attr({
+          "x": barWidth / 2,
+          "y": labelHeight - 5,
+          "text-anchor": "middle",
+          "visibility": "hidden",
+        }).text(valueText);
+
+        legendWidth = Math.max(
+          d3BarLabelText.node().getBBox().width,
+          bar.d3BarValue.node().getBBox().width
+        );
+
+        bar.legendSpan = [
+          barX - d3BarLabelText.node().getBBox().width / 2,
+          barX + d3BarLabelText.node().getBBox().width / 2
+        ];
+
+        if (distLeft < legendWidth / 2) {
+          bar.d3BarValue.attr({
+            "x": 0,
+            "text-anchor": "start",
+          });
+          d3BarLabelText.attr({
+            "x": 0,
+            "text-anchor": "start",
+          });
+          bar.legendSpan = [
+            barX,
+            barX + d3BarLabelText.node().getBBox().width
+          ];
+        } else if (distRight < legendWidth / 2) {
+          bar.d3BarValue.attr({
+            "x": barWidth,
+            "text-anchor": "end",
+          });
+          d3BarLabelText.attr({
+            "x": barWidth,
+            "text-anchor": "end",
+          });
+          bar.legendSpan = [
+            barX + barWidth - d3BarLabelText.node().getBBox().width,
+            barX + barWidth
+          ];
+        }
+
+        x += barWidth + xMargin * 2;
+      });
+
+      graphCtrl.showBar();
+
+      return graphCtrl;
+    },
+
+    svgPathBracket: function (x, y, width, height, radius) {
+      var r = radius;
+      var t = 1;
+
+      var ySign = 0 < height ? 1 : -1;
+      var yLength = ySign * (Math.abs(height) - Math.abs(r) * 2 - Math.abs(t));
+      var yT = ySign * t;
+      var yR = ySign * r;
+      var y1a = y + yR;
+      var y2a = y1a + yLength;
+      var y3a = y2a + yR;
+      var y0b = y + yT;
+      var y1b = y1a + yT;
+      var y2b = y2a + yT;
+      var y3b = y3a + yT;
+
+      var xSign = 0 < width ? 1 : -1;
+      var xLength = xSign * (Math.abs(width) - Math.abs(r) * 2);
+      var xR = xSign * r;
+      var x1 = x + xR;
+      var x2a = x + xLength;
+      var x2b = x + xR + xLength;
+      var x2c = x + xR * 2;
+      var x3 = x2c + xLength;
+
+      var A = "A " + r + "," + r + " 90 0,";
+      var a1 = ((0 < height) + (0 < width) + 1) % 2;
+      var a2 = 1 - a1;
+
+      var d = (
+        // "M " + x + "," + y + "  H " + x2a + " " +
+        //   A + a1 + " " + x2b + "," + y1a + " " +
+        //   "V " + y2a + " " +
+        //   A + a2 + " " + x3 + "," + y3a + " " +
+        //   "V " + y3b + " " +
+          "M " + x2c + " " + y3b + " " +
+          A + a1 + " " + x1 + "," + y2b + " " +
+          "V " + y1b + " " +
+          A + a2 + " " + x + "," + y0b + " " +
+          ""
+      );
+      return d;
+    },
+
+    svgRenderBracket: function ($bracket, leftHeight, rightHeight) {
+      var app = this;
+
+      var d3Svg;
+      var width = $bracket.width();
+      var height = $bracket.height();
+
+      d3Svg = d3.select($bracket[0]).append("svg");
+      d3Svg.attr({
+        "width": width,
+        "height": height
+      });
+
+      var paddingX = 2;
+      var radius = 5;
+
+      var cx = width / 2;
+      var cy = height / 2;
+      var w = cx - paddingX + 2;
+
+      var dirList = [
+        [-1, -1, leftHeight],
+        [-1, 1, leftHeight],
+        [1, -1, rightHeight],
+        [1, 1, rightHeight],
+      ];
+
+      _.each(dirList, function (dir) {
+        var xDir = dir[0];
+        var yDir = dir[1];
+        var height = dir[2];
+
+        if (Math.abs(height) > radius * 4) {
+          d3Svg.append("path").attr({
+            "d": app.svgPathBracket(
+              cx + paddingX * xDir, cy, w * xDir, height * yDir / 2, radius),
+            "class": app.selector("<%= prefix %>-licence-bracket")
+          });
+        }
+      });
     },
 
     // Filter functions

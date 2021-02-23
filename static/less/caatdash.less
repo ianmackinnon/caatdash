@@ -7,8 +7,10 @@
 @color-caat-black: #000000;
 @color-caat-white: #000000;
 @color-caat-action-red: #ff0019;
-@color-caat-stone: #eje7e0;
+@color-caat-stone: #ece7e0;
 @color-caat-midnight-blue: #1e1d3e;
+
+@color-caatdash-dark-grey: darken(@color-caat-stone, 70%);
 
 @dashboard-widget-margin: 20px;
 @home-widget-margin: 40px;
@@ -889,6 +891,20 @@ div.@{prefix}-field > div.@{prefix}-field-input {
     visibility: hidden;
 }
 
+
+/* D3 SVG Graph */
+
+svg g.caatdash-bar-graph-group * {
+    pointer-events: none;
+}
+svg g.caatdash-bar-graph-group text,
+svg g.caatdash-bar-graph-group rect.caatdash-bar-graph-base {
+    fill: @color-caatdash-dark-grey;
+}
+svg g.caatdash-bar-graph-group rect.caatdash-bar-graph-target {
+    fill: rgba(0, 0, 0, 0);
+    pointer-events: auto;
+}
 
 
 /* Dashboard result rank */

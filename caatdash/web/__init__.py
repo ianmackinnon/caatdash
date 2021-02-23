@@ -73,6 +73,13 @@ class FilterValueException(Exception):
 
 
 
+class I18nDummy(Exception):
+    @staticmethod
+    def pgettext(context, message):
+        return message
+
+
+
 def prune(d):
     if hasattr(d, "items"):
         d = {k: prune(v) for k, v in d.items()}
