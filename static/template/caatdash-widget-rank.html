@@ -1,4 +1,4 @@
-<div class="<%= prefix %>-widget <%= prefix %>-result-widget <%= prefix %>-result-rank-widget <%= prefix %>-widget-rank-<%= name %>">
+<div class="<%= prefix %>-widget <%= prefix %>-result-widget <%= prefix %>-result-rank-widget <%= prefix %>-widget-rank-<%= name %><%= fullWidth ? ' ' + prefix + '-widget-full-width' : ''%>">
 
   <div class="<%= prefix %>-result-widget-head">
     <h3><%= titleFormat(title) %></h3>
@@ -40,7 +40,9 @@
   <div class="<%= prefix %>-result-widget-bar-title">
     <div class="<%= prefix %>-result-bar">
       <div class="<%= prefix %>-result-bar-text"><%= titleFormat(itemLabel) %></div>
-      <div class="<%= prefix %>-result-bar-value"><%= titleFormat(valueLabel || "") %></div>
+      <% _.each(metricList, function (metricData) { %>
+      <div class="<%= prefix %>-result-bar-value"><%= titleFormat(metricData.valueLabel || "") %></div>
+      <% }); %>
     </div>
   </div>
 
@@ -48,12 +50,13 @@
     <% _.forEach(rankedItems.items, function (item, i) { %>
     <div class="<%= prefix %>-result-bar">
       <div class="<%= prefix %>-result-bar-text"><%= item.label %></div>
-      <% if (valueLabel) { %>
-      <div class="<%= prefix %>-result-bar-value">
-        <%= valueFormat ? valueFormat(item[value]) : item[value] %>
+      <% _.each(metricList, function (metricData) { %>
+      <div class="<%= prefix %>-result-bar-value" <%= prefix %>-metric="<%= metricData.cssKey %>">
+        <div class="<%= prefix %>-result-bar-value-text<%= item[metricData.value] ? '' : ' ' + prefix + '-weak' %>">
+        <%= metricData.valueFormat ? metricData.valueFormat(item[metricData.value]) : item[metricData.value] %></div>
+        <div class="<%= prefix %>-result-bar-value-bar <%= prefix %>-graphic-<%= metricData.cssKey %>"></div>
       </div>
-      <div class="<%= prefix %>-result-bar-bar <%= prefix %>-graphic-<%= cssKey %>"></div>
-      <% } %>
+      <% }); %>
     </div>
     <% }) %>
   </div>
