@@ -857,7 +857,6 @@ class BaseHandler(FirmaBaseHandler):
 
         url = self.url_root
 
-
         if path is None:
             path = self.request.path
         elif "?" in path:

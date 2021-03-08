@@ -26,6 +26,8 @@
 @margin-small: 6px;
 @margin-tiny: 2px;
 
+@caat-rank-bar-height: 6px;
+
 
 /* Undo main site rules */
 
@@ -89,7 +91,8 @@
     border-bottom:0px;
 }
 
-#@{prefix} .weak {
+#@{prefix} .weak,
+.@{prefix}-weak {
     opacity: 0.5;
 }
 
@@ -203,6 +206,7 @@ a.@{prefix}-control-icon:hover {
     border: 1px solid #ddd;
     border-radius: 4px;
 }
+
 
 
 /* Navigation */
@@ -358,6 +362,11 @@ a.@{prefix}-control-icon:hover {
 }
 #@{prefix}-dashboard-results .@{prefix}-widget {
     width: calc((100% - @dashboard-widget-margin * 2) / 2);
+    margin: calc(@dashboard-widget-margin / 2);
+}
+
+#@{prefix}-dashboard-results .@{prefix}-widget-full-width {
+    width: 100%;
     margin: calc(@dashboard-widget-margin / 2);
 }
 
@@ -932,7 +941,8 @@ svg g.caatdash-bar-graph-group rect.caatdash-bar-graph-target {
     padding: 0 4px;
 }
 .@{prefix}-result-bar-text {
-    width: 80%;
+    flex: 2;
+    // width: 80%;
 }
 .@{prefix}-result-bar-desc {
     display: inline-block;
@@ -940,7 +950,9 @@ svg g.caatdash-bar-graph-group rect.caatdash-bar-graph-target {
     opacity: .6;
 }
 .@{prefix}-result-bar-value {
-    width: 20%;
+    position: relative;
+    flex: 1;
+    // width: 20%;
     text-align: right;
     border-bottom: 4px solid rgba(0, 0, 0, 0);
     border-radius: 2px;
@@ -949,7 +961,7 @@ svg g.caatdash-bar-graph-group rect.caatdash-bar-graph-target {
 }
 .@{prefix}-result-widget-bar-title .@{prefix}-result-bar-text,
 .@{prefix}-result-widget-bar-title .@{prefix}-result-bar-value {
-    width: 50%;
+    // width: 50%;
     border-bottom: none;
     margin: 5px 0;
 }
@@ -969,7 +981,7 @@ svg g.caatdash-bar-graph-group rect.caatdash-bar-graph-target {
     border: 1px solid #e8e8e8;
 }
 .@{prefix}-result-widget-ctrl .@{prefix}-result-bar-title {
-    width: 40%;
+    width: 30%;
     text-align: right;
     padding-right: 6px;
     line-height: 28px;
@@ -977,7 +989,7 @@ svg g.caatdash-bar-graph-group rect.caatdash-bar-graph-target {
 }
 .@{prefix}-result-widget-ctrl .@{prefix}-result-bar-ctrl {
     display: flex;
-    width: 60%;
+    width: 70%;
     padding-right: 0;
 }
 #@{prefix} .@{prefix}-result-widget-ctrl .@{prefix}-result-bar-search-ctrl input {
@@ -1010,11 +1022,11 @@ svg g.caatdash-bar-graph-group rect.caatdash-bar-graph-target {
     font-size: 14px;
 }
 
-.@{prefix}-result-bar-bar {
+.@{prefix}-result-bar-value-bar {
     position: absolute;
-    right: 0;
+    right: 4px;
     top: 20px;
-    height: 6px;
+    height: @caat-rank-bar-height;
     border-radius: 2px;
 }
 
