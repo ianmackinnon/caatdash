@@ -2,6 +2,7 @@ import json
 import time
 import logging
 import collections
+from urllib.parse import urlparse, urljoin
 from typing import Iterable, Union, Dict
 
 import pytest
@@ -373,7 +374,7 @@ def _test_js_filters_to_params(app_prefix, build_url, base_url, selenium, case):
     If `input` is not `None`, all fields must be present.
     """
 
-    url = build_url(base_url, "/dashboard", params=case_lang_params(case))
+    url = build_url(base_url, "/overview", params=case_lang_params(case))
     selenium.get(url)
 
 
@@ -400,7 +401,7 @@ def _test_js_filters_to_params(app_prefix, build_url, base_url, selenium, case):
 
 def _test_js_uri_to_params(app_prefix, build_url, base_url, selenium, case):
 
-    url = build_url(base_url, "/dashboard", params=case_lang_params(case))
+    url = build_url(base_url, "/overview", params=case_lang_params(case))
     selenium.get(url)
 
     # Wait for results to load to ensure constants have loaded.
@@ -424,7 +425,7 @@ def _test_js_uri_to_params(app_prefix, build_url, base_url, selenium, case):
 
 
 def _test_js_params_to_filters(app_prefix, build_url, base_url, selenium, case):
-    selenium.get(base_url + "/dashboard")
+    selenium.get(base_url + "/overview")
 
     # Wait for results to load to ensure constants have loaded.
     assert selenium.find(f"div.{app_prefix}-widget-date")
@@ -447,6 +448,55 @@ def _test_js_params_to_filters(app_prefix, build_url, base_url, selenium, case):
 
 
 
+def _test_dashboard_api_redirect_canonical(
+        request, base_url, http_request,
+        build_url, parse_url_params,
+        case
+):
+    url_original = build_url(
+        base_url, case["original"]["resource"],
+        case["original"].get("params", None)
+    )
+    url_canonical = build_url(
+        base_url, case["canonical"]["resource"],
+        case["canonical"].get("params", None)
+    )
+
+    url = url_original
+
+    while True:
+        response = http_request(url, pytest_request=request, redirect=False)
+        if 300 <= response.status_code <= 399:
+            location = response.headers.get("Location")
+            if not location.startswith("http"):
+                location = urljoin(url, location)
+
+            url = location
+            continue
+
+        assert response.status_code == 200
+        break
+
+    final_resource = urlparse(url).path
+    final_params = parse_url_params(url)
+    base_path = urlparse(base_url).path
+    assert final_resource.startswith(base_path)
+    final_resource = final_resource[len(base_path):]
+
+    canonical_params = case["canonical"].get("params", None)
+
+    try:
+        assert final_resource == case["canonical"]["resource"]
+        assert final_params == canonical_params
+    except AssertionError:
+        LOG.warning("")
+        LOG.warning("original url:    %s", url_original)
+        LOG.warning("redirected url:  %s", url)
+        LOG.warning("canonical url:   %s", url_canonical)
+        raise
+
+
+
 def _test_dashboard_api_title_phrase(
         build_url, base_url, get_json, case,
         i18n=None, lang=None
@@ -455,7 +505,7 @@ def _test_dashboard_api_title_phrase(
     if lang:
         params["lang"] = lang
 
-    url = build_url(base_url, "/api/dashboard", params=params)
+    url = build_url(base_url, "/api/overview", params=params)
 
     data = get_json(url, headers={
         "Accept": "application/json"
@@ -479,6 +529,39 @@ def _test_dashboard_api_title_phrase(
 
 
 
+def _test_dashboard_browser_redirect_canonical(
+        base_url, selenium,
+        build_url, parse_url_params, await_state, dashboard_resources,
+        case,
+):
+
+    canonical = case.get("canonical_js", None) or case["canonical"]
+
+    url_original = build_url(
+        base_url, case["original"]["resource"], case["original"].get("params", None))
+    url_canonical = build_url(
+        base_url, canonical["resource"], canonical.get("params", None))
+
+    selenium.get(url_original)
+
+    if case["canonical"]["resource"] in dashboard_resources:
+        await_state(selenium)
+
+    params_current = parse_url_params(selenium.current_url)
+    params_canonical = parse_url_params(url_canonical)
+
+    path_current = urlparse(selenium.current_url).path
+    path_canonical = urlparse(url_canonical).path
+
+    try:
+        assert params_current == params_canonical
+        assert path_current == path_canonical
+    except AssertionError:
+        LOG.warning("")
+        LOG.warning("original url:    %s", url_original)
+        LOG.warning("current url:     %s", selenium.current_url)
+        LOG.warning("canonical url:   %s", url_canonical)
+        raise
 
 
 def _test_dashboard_browser_title_phrase(
@@ -491,7 +574,7 @@ def _test_dashboard_browser_title_phrase(
     if lang:
         params["lang"] = lang
 
-    resource = case.get("resource", "/dashboard")
+    resource = case.get("resource", "/overview")
 
     url = build_url(base_url, resource, params=params)
     selenium.get(url)
@@ -573,7 +656,7 @@ def _test_dashboard_api_rank_item_i18n(
     not be translated.
     """
 
-    url = base_url + build_resource("/api/dashboard", case.get("params", None))
+    url = base_url + build_resource("/api/overview", case.get("params", None))
     data = get_json(url, headers={
         "Accept": "application/json"
     })
@@ -633,7 +716,7 @@ def _test_dashboard_browser_rank_item_i18n(
     -   the correct language
     """
 
-    url = build_url(base_url, "/dashboard", case.get("params", None))
+    url = build_url(base_url, "/overview", case.get("params", None))
 
     selenium.get(url)
 
@@ -679,7 +762,7 @@ def _test_dashboard_browser_set_filter_i18n(
     if lang:
         params["lang"] = lang
 
-    url = build_url(base_url, "/dashboard", params or None)
+    url = build_url(base_url, "/overview", params or None)
 
     selenium.get(url)
 
