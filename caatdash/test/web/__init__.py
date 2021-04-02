@@ -1,3 +1,4 @@
+import re
 import json
 import time
 import logging
@@ -646,6 +647,47 @@ def pgettext_dummy(_context, msgtxt):
 
 
 
+def _test_dashboard_api_rank(
+        request, log_response_profile, build_resource, base_url, get_json,
+        case,
+        extra_test_data=None,
+        extra_test_facet=None,
+        surplus_keys_data=None,
+):
+    url = base_url + build_resource("/api" + case["resource"], case.get("params", None))
+    data = get_json(url, headers={
+        "Accept": "application/json"
+    })
+    log_response_profile(request, data)
+
+
+    # This function is no designed to test pages with no results.
+    assert data["result"]
+
+    try:
+        if extra_test_data:
+            extra_test_data(data)
+
+        rank_key_set = set(data["result"]) - (surplus_keys_data or set())
+
+        assert rank_key_set == set(case["rank"])
+
+        for facet, facet_data in case["rank"].items():
+            assert data["result"][facet]["index"] == facet_data["index"]
+
+            # This function is no designed to test pages with no results.
+            assert data["result"][facet]["items"]
+
+            if extra_test_facet:
+                extra_test_facet(facet, data["result"][facet], facet_data)
+
+    except AssertionError:
+        LOG.error("url:      %s", url)
+        raise
+
+
+
+
 def _test_dashboard_api_rank_item_i18n(
         request, log_response_profile, build_resource, base_url, get_json,
         case
@@ -704,6 +746,79 @@ def _test_dashboard_api_rank_item_i18n(
         LOG.error("")
         LOG.error("url:      %s", url)
         pytest.fail()
+
+
+
+def _test_dashboard_browser_rank(
+        build_url, app_prefix, await_state, selenium, base_url, case,
+        extra_test_facet=None,
+):
+    url = build_url(base_url, case["resource"], case.get("params", None))
+
+    selenium.get(url)
+
+    try:
+        assert_no_errors(selenium, base_url)
+    except AssertionError:
+        LOG.error(url)
+        raise
+
+    await_state(selenium)
+
+    tab_el = selenium.find(f"#{app_prefix}-nav-item-rank", wait=False, required=False)
+    tab_expected = case.get("rank_tab_title", None)
+
+    if tab_expected:
+        assert tab_el.is_displayed()
+        assert tab_el.text == tab_expected
+    else:
+        assert tab_el is None or not tab_el.is_displayed()
+
+
+    widget_data = {}
+    for widget_el in selenium.find_all(f"div.{app_prefix}-result-rank-widget"):
+        class_text = widget_el.get_attribute("class")
+        match = re.search(f"{app_prefix}-widget-rank-([^ ]+)", class_text)
+        assert match
+        facet = match.group(1)
+
+        widget_data[facet] = {
+            "metric": [],
+        }
+
+        sort_select = selenium.find(
+            f"div.{app_prefix}-result-bar-sort-ctrl option[selected]",
+            node=widget_el, required=False, wait=False)
+
+        if not sort_select:
+            sort_select = selenium.find(
+                f"div.{app_prefix}-result-bar-sort-ctrl span[value]",
+                node=widget_el, required=False, wait=False)
+
+        assert sort_select
+
+        first_bar_el = selenium.find(
+            f"div.{app_prefix}-result-widget-bar-list div.{app_prefix}-result-bar",
+            node=widget_el, wait=False)
+
+        value_el_list = selenium.find_all(
+            f"div.{app_prefix}-result-bar-value",
+            node=first_bar_el, wait=False)
+
+        for value_el in value_el_list:
+            metric = value_el.get_attribute("exuk-metric")
+            widget_data[facet]["metric"].append(metric)
+
+        widget_data[facet]["index"] = sort_select.get_attribute("value")
+
+
+    assert set(widget_data) == set(case["rank"])
+
+    for facet, facet_data in case["rank"].items():
+        assert widget_data[facet]["index"] == facet_data["index"]
+
+        if extra_test_facet:
+            extra_test_facet(facet, widget_data[facet], facet_data)
 
 
 
