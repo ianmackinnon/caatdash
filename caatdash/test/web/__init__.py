@@ -192,6 +192,42 @@ def filter_set_get_value(
 
 
 
+def filter_set_remove_value(
+        selenium,
+        prefix: str,
+        key: str,
+        label: str,
+        filter_div=None,
+        item_el=None,
+        **kwargs,
+) -> None:
+    """
+    Return a dict of {label: div}.
+    """
+
+    if filter_div is None:
+        filter_div = filter_set_get_filter(selenium, prefix, key, **kwargs)
+
+    if item_el is None:
+        for item in selenium.find_all(
+                f"div.{prefix}-filter-option", node=filter_div, **kwargs):
+            if "option-search" in item.get_attribute("class"):
+                continue
+
+            text_el = selenium.find(
+                f"div.{prefix}-filter-option-text", node=item, required=True, wait=False)
+            if text_el.text == label:
+                item_el = item
+                break
+
+    assert item_el
+
+    remove_el = selenium.find(
+        f"a.{prefix}-filter-remove", node=item_el, required=True, wait=False)
+    selenium.scroll_and_click(remove_el)
+
+
+
 def filter_set_search(
         selenium,
         prefix: str,
@@ -891,8 +927,10 @@ def _test_dashboard_browser_set_filter_i18n(
 
 
     def get_filter_el(key):
-        filter_div = filter_set_get_filter(selenium, app_prefix, key, wait=False)
-        filter_input = filter_set_get_input(selenium, app_prefix, key, filter_div=filter_div, wait=False)
+        filter_div = filter_set_get_filter(
+            selenium, app_prefix, key, wait=False)
+        filter_input = filter_set_get_input(
+            selenium, app_prefix, key, filter_div=filter_div, wait=False)
 
         return filter_div, filter_input
 
@@ -910,20 +948,27 @@ def _test_dashboard_browser_set_filter_i18n(
 
         for item in filter_data["item"]:
             search = item.get("search", item["label"])
-            match_li = filter_set_search(selenium, app_prefix, filter_key, search, label=item["label"])
+            match_li = filter_set_search(
+                selenium, app_prefix, filter_key, search, label=item["label"])
 
             selenium.scroll_and_click(match_li)
             state = await_state(selenium, state)
 
-            value_list = filter_set_get_value(selenium, app_prefix, filter_key, wait=False)
+            value_list = filter_set_get_value(
+                selenium, app_prefix, filter_key, wait=False)
 
             try:
-                assert item["label"] in value_list
-            except AssertionError:
+                value_item_el = value_list.get(item["label"], None)
+            except KeyError:
                 LOG.error("filter key:   %s", filter_key)
                 LOG.error("label:        %s", item["label"])
                 LOG.error("value:        %s", repr(list(value_list)))
                 raise
+
+            filter_set_remove_value(
+                selenium, app_prefix, filter_key, label=item["label"],
+                item_el=value_item_el,
+                filter_div=filter_div, wait=False)
 
 
     if fail:
