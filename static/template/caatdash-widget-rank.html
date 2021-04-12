@@ -69,15 +69,22 @@
         <% } else { %>
         style="visibility: hidden;"
         <% } %>
-        ><%= i18n.pgettext("dashboard-page", "See full results") %></a>
+        ><%= i18n.pgettext("dashboard-page", "See further results") %></a>
     </div>
     <!-- <div class="<%= prefix %>-widget-action <%= prefix %>-widget-action-share <%= prefix %>-disabled"> -->
     <!--   <i class="fa fa-share-alt"></i> -->
     <!--   <a href=""><%= i18n.pgettext("dashboard-page", "Share this") %></a> -->
     <!-- </div> -->
-    <!-- <div class="<%= prefix %>-widget-action <%= prefix %>-widget-action-download <%= prefix %>-disabled"> -->
-    <!--   <i style="visibility: hidden;" class="fa fa-save"></i> -->
-    <!--   <a style="visibility: hidden;" href=""><%= i18n.pgettext("dashboard-page", "Download full data") %></a> -->
-    <!-- </div> -->
+    <div class="<%= prefix %>-widget-action <%= prefix %>-widget-action-download">
+      <i style="visibility: hidden;" class="fa fa-save"></i>
+      <a
+        <% if (downloadUri) { %>
+        href="<%= downloadUri %>"
+        <% } else { %>
+        style="visibility: hidden;"
+        <% } %>
+        download
+        ><%= i18n.pgettext("dashboard-page", "Download data") %></a>
+    </div>
   </div>
 </div>
