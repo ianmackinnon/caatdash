@@ -628,7 +628,10 @@ class FilterPartition(Filter):
 
         value = request_args[self.key]
 
-        if value is None or value == self.default_value:
+        if value is None:
+            value = self.all_value
+
+        if value == self.default_value:
             return []
 
         if value == self.all_value:
