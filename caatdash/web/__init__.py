@@ -623,7 +623,11 @@ class FilterPartition(Filter):
 
     def query_params(self, request_args) -> List[str]:
         """
-        Return URL-encoded query string value
+        Convert `request_args` URL-encoded query string value
+
+        For a partition, filtering is only applied if the `request_args` value
+        is truthy. So a `request_args` value of `None` is effectively the
+        `all_value` for the filter.
         """
 
         value = request_args[self.key]
@@ -633,6 +637,7 @@ class FilterPartition(Filter):
 
         if value == self.default_value:
             return []
+
 
         if value == self.all_value:
             value = ["all"]
@@ -790,7 +795,6 @@ class BaseHandler(FirmaBaseHandler):
 
         query_string_altered = None
 
-
         fragment = None
         if path:
             parts = urllib.parse.urlparse(path)
@@ -816,6 +820,7 @@ class BaseHandler(FirmaBaseHandler):
             args = self.get_request_args_default()
         else:
             args = self.request_args.copy()
+
 
         query_parts = []
 

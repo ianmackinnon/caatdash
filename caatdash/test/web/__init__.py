@@ -527,6 +527,10 @@ def _test_dashboard_api_redirect_canonical(
         assert final_params == canonical_params
     except AssertionError:
         LOG.warning("")
+        LOG.warning("final_resource:  %s", final_resource)
+        LOG.warning("case_resource:   %s", case["canonical"]["resource"])
+        LOG.warning("final_params:    %s", final_params)
+        LOG.warning("case_params:     %s", canonical_params)
         LOG.warning("original url:    %s", url_original)
         LOG.warning("redirected url:  %s", url)
         LOG.warning("canonical url:   %s", url_canonical)
