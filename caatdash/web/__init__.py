@@ -719,11 +719,18 @@ class CaatDashApplication(Application):
         domain = self.app_prefix
         i18n_path = self.path / "static/i18n"
 
+        lang_enabled = None
+        if "lang" in self.settings.options:
+            lang_enabled = [v.strip() for v in self.settings.options.lang.split(",")]
+
         self.i18n = {}
         self.i18n_options = []
         fail = False
         for lang_path in i18n_path.glob(f"*/LC_MESSAGES/{domain}.mo"):
             lang = lang_path.parent.parent.name
+
+            if lang_enabled and lang not in lang_enabled:
+                continue
 
             try:
                 label = lang_labels[lang]
