@@ -720,7 +720,7 @@ class CaatDashApplication(Application):
         i18n_path = self.path / "static/i18n"
 
         lang_enabled = None
-        if "lang" in self.settings.options:
+        if "lang" in self.settings.options and self.settings.options.lang:
             lang_enabled = [v.strip() for v in self.settings.options.lang.split(",")]
 
         self.i18n = {}
