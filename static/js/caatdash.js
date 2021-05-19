@@ -1207,11 +1207,15 @@
     // i18n functions
 
     setLanguage: function (lang, domain) {
+      var app = this;
       var data;
 
       if (lang === this.lang) {
         return;
       }
+
+      $(app.selector("#<%= prefix %>"))
+        .toggleClass(app.selector("<%= prefix %>-rtl"), lang == "ar");
 
       if (_.isNil(lang)) {
         this.i18n = {

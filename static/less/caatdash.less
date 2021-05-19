@@ -63,7 +63,11 @@
     font-size: 14px;
     line-height: 20px;
 
-    text-align: left;
+    text-align: start;
+}
+
+#@{prefix}.@{prefix}-rtl {
+    direction: rtl;
 }
 
 #@{prefix} h1,
@@ -160,7 +164,7 @@ span.@{prefix}-link:hover {
 }
 
 input.numeric {
-    text-align: right;
+    text-align: end;
 }
 
 
@@ -504,7 +508,7 @@ div.@{prefix}-preset-widget h3.value {
     background: rgb(208, 104, 0);
     background: #333;
 
-    text-align: right;
+    text-align: end;
     font-size: 28px;
     line-height: 30px;
 }
@@ -553,7 +557,7 @@ div.@{prefix}-preset-widget a.@{prefix}-preset-img-attribution:hover {
 }
 .@{prefix}-form-widget label {
     padding: 0 15px;
-    text-align: right;
+    text-align: end;
 }
 
 #@{prefix} div.@{prefix}-field input {
@@ -608,7 +612,12 @@ div.@{prefix}-field > div.@{prefix}-field-input {
 
 #@{prefix}-filter-column {
     width: 180px;
+    margin-left: 0;
     margin-right: 30px;
+}
+#@{prefix}.@{prefix}-rtl #@{prefix}-filter-column {
+    margin-right: 0;
+    margin-left: 30px;
 }
 #@{prefix}-result-column {
     position: relative;
@@ -680,7 +689,7 @@ div.@{prefix}-field > div.@{prefix}-field-input {
 }
 .@{prefix}-filter-header .@{prefix}-filter-control {
     width: 22px;
-    text-align: right;
+    text-align: end;
 }
 .@{prefix}-filter.@{prefix}-closed-style .@{prefix}-filter-header:hover h3,
 .@{prefix}-filter.@{prefix}-closed-style .@{prefix}-filter-header:hover i {
@@ -709,7 +718,7 @@ div.@{prefix}-field > div.@{prefix}-field-input {
 }
 .@{prefix}-filter-range .@{prefix}-filter-header i,
 .@{prefix}-filter-set .@{prefix}-filter-header i {
-    text-align: right;
+    text-align: end;
 }
 
 .@{prefix}-filter-range div.@{prefix}-field-input {
@@ -883,7 +892,7 @@ div.@{prefix}-field > div.@{prefix}-field-input {
 }
 .@{prefix}-widget-action {
     padding: 2px 4px;
-    text-align: left;
+    text-align: start;
 }
 .@{prefix}-widget-action .fa {
     line-height: inherit;
@@ -893,7 +902,7 @@ div.@{prefix}-field > div.@{prefix}-field-input {
     opacity: 0.5;
 }
 .@{prefix}-widget-action:last-child {
-    text-align: right;
+    text-align: end;
 }
 .@{prefix}-widget-action-share {
     visibility: hidden;
@@ -952,7 +961,7 @@ svg g.caatdash-bar-graph-group rect.caatdash-bar-graph-target {
     position: relative;
     flex: 1;
     // width: 20%;
-    text-align: right;
+    text-align: end;
     border-bottom: 4px solid rgba(0, 0, 0, 0);
     border-radius: 2px;
 }
@@ -981,7 +990,7 @@ svg g.caatdash-bar-graph-group rect.caatdash-bar-graph-target {
 }
 .@{prefix}-result-widget-ctrl .@{prefix}-result-bar-title {
     width: 30%;
-    text-align: right;
+    text-align: end;
     padding-right: 6px;
     line-height: 28px;
     color: #999;
@@ -1027,6 +1036,10 @@ svg g.caatdash-bar-graph-group rect.caatdash-bar-graph-target {
     top: 20px;
     height: @caat-rank-bar-height;
     border-radius: 2px;
+}
+#@{prefix}.@{prefix}-rtl .@{prefix}-result-bar-value-bar {
+    right: auto;
+    left: 4px;
 }
 
 
