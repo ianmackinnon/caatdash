@@ -1752,6 +1752,19 @@
         filter = CaatDashFilter.prototype.create(
           app, control, app.filterManifest[key], setCallback);
 
+        if (app.filterManifest[key].class) {
+          var classList = app.filterManifest[key].class;
+          if (_.isString(classList)) {
+            classList = classList.split(/\s+/);
+          }
+          _.each(classList, function (c) {
+            if (c) {
+              filter.el.$filter.addClass(app.prefix + "-" + c);
+            }
+          });
+
+        }
+
         if (!_.isNil(filter.el)) {
           control.el.$filterContainer.append(filter.el.$filter);
         }

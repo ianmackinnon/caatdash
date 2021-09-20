@@ -400,6 +400,28 @@ class FilterText(Filter):
 
 
 
+class FilterBoolean(Filter):
+    def request_args(self, raw_params, **_kwargs) -> Tuple[dict, bool]:
+        args = {
+            self.key: None,
+        }
+        redirect = False
+
+        value = raw_params.get(self.key, None)
+        if value:
+            # `value` is a list. Accept only the last supplied value.
+            value = value[-1]
+
+            if value in ("0", "false"):
+                args[self.key] = False
+            elif value in ("1", "true"):
+                args[self.key] = True
+
+        return (args, redirect)
+
+
+
+
 class FilterGroupedSet(Filter):
     re_search_text = re.compile('^\"(.*)\"$')
 
