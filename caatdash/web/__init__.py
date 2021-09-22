@@ -941,7 +941,7 @@ class BaseHandler(FirmaBaseHandler):
         parts = re.compile(r"[&;]").split(query_string)
         for part in parts:
             part = urllib.parse.unquote(part)
-            e = part.split("=")
+            e = part.split("=", 1)
             if len(e) == 2:
                 (key, value) = e
             else:
